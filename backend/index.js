@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 const port = 5000;
 
-// Middleware
+// ✅ Middleware
 app.use(cors({
   origin: 'http://localhost:3000', // React frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -12,19 +12,22 @@ app.use(cors({
 }));
 app.use(express.json()); // to parse JSON body
 
-// Routes
+// ✅ Routes
 const guestRoutes = require('./routes/guests');
 const bookingRoutes = require('./routes/bookings');
+const paymentRoutes = require('./routes/payments');
 
-app.use('/api/guests', guestRoutes);        // example: POST http://localhost:5000/api/guests
-app.use('/api/bookings', bookingRoutes);    // example: GET  http://localhost:5000/api/bookings/check_availability
+// Mount routes under /api
+app.use('/api/guests', guestRoutes);        // POST /api/guests
+app.use('/api/bookings', bookingRoutes);    // GET  /api/bookings/check_availability
+app.use('/api/payments', paymentRoutes);    // POST /api/payments
 
-// Health check route
+// ✅ Health check route
 app.get('/', (req, res) => {
-  res.send('Backend is running!');
+  res.send('✅ Backend is running!');
 });
 
-// Server start
+// ✅ Start the server
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`🚀 Server is running at http://localhost:${port}`);
 });
