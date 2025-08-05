@@ -2,86 +2,94 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Helper to get all dates between check-in and check-out
-function getDateRange(start, end) {
-  const dateArray = [];
-  const currentDate = new Date(start);
-  const endDate = new Date(end);
-
-  while (currentDate <= endDate) {
-    dateArray.push(new Date(currentDate).toISOString().split('T')[0]); // Format: YYYY-MM-DD
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return dateArray;
-}
-
-// ✅ 1. GET /check_availability
+// Check room availability
 router.get('/check_availability', (req, res) => {
-  const { check_in, check_out } = req.query;
+  const { room_id, date } = req.query;
 
-  if (!check_in || !check_out) {
-    return res.status(400).json({ error: 'Please provide check_in and check_out dates' });
+  if (!room_id || !date) {
+    return res.status(400).json({ error: 'Room ID and date are required' });
   }
 
   const query = `
-    SELECT r.room_id, rt.type_name
-    FROM Rooms r
-    JOIN Room_types rt ON r.room_type_id = rt.room_type_id
-    WHERE r.room_id NOT IN (
-      SELECT room_id
-      FROM room_availability
-      WHERE date BETWEEN ? AND ? AND is_available = 0
-    )
+    SELECT * FROM Room_Availability
+    WHERE room_id = ? AND date = ? AND is_available = 1
   `;
 
-  db.query(query, [check_in, check_out], (err, results) => {
+  db.query(query, [room_id, date], (err, results) => {
     if (err) {
-      console.error('Error fetching availability:', err);
+      console.error('Error checking availability:', err);
       return res.status(500).json({ error: 'Database error' });
     }
 
-    res.json({ available_rooms: results });
+    if (results.length === 0) {
+      return res.json({ available: false });
+    }
+
+    res.json({ available: true });
   });
 });
 
-// ✅ 2. POST /book_room
+// Book a room
 router.post('/book_room', (req, res) => {
-  const { guest_id, room_id, check_in, check_out } = req.body;
+  const {
+    guest_id,
+    room_id,
+    check_in_date,
+    check_out_date,
+    total_amount,
+    advance_payment
+  } = req.body;
 
-  if (!guest_id || !room_id || !check_in || !check_out) {
-    return res.status(400).json({ error: 'Missing booking details' });
+  if (!guest_id || !room_id || !check_in_date || !check_out_date) {
+    return res.status(400).json({ error: 'Missing booking information' });
   }
 
-  const bookingQuery = `
-    INSERT INTO Bookings (guest_id, room_id, check_in, check_out)
-    VALUES (?, ?, ?, ?)
+  const query = `
+    INSERT INTO Bookings (guest_id, room_id, check_in_date, check_out_date, total_amount, advance_payment)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(bookingQuery, [guest_id, room_id, check_in, check_out], (err, result) => {
-    if (err) {
-      console.error('Error creating booking:', err);
-      return res.status(500).json({ error: 'Failed to create booking' });
-    }
-
-    const booking_id = result.insertId;
-    const dates = getDateRange(check_in, check_out);
-    const availabilityUpdates = dates.map(date => [room_id, date, 0]);
-
-    const updateQuery = `
-      INSERT INTO room_availability (room_id, date, is_available)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE is_available = 0
-    `;
-
-    db.query(updateQuery, [availabilityUpdates], (err2) => {
-      if (err2) {
-        console.error('Error updating availability:', err2);
-        return res.status(500).json({ error: 'Booking done, but availability update failed' });
+  db.query(
+    query,
+    [guest_id, room_id, check_in_date, check_out_date, total_amount || 0, advance_payment || 0],
+    (err, result) => {
+      if (err) {
+        console.error('Error inserting booking:', err);
+        return res.status(500).json({ error: 'Booking failed' });
       }
 
-      res.json({ message: 'Room booked successfully!', booking_id });
-    });
+      res.status(201).json({
+        message: 'Room booked successfully',
+        booking_id: result.insertId
+      });
+    }
+  );
+});
+
+// Get all bookings
+router.get('/bookings', (req, res) => {
+  const query = `
+    SELECT 
+      b.booking_id,
+      g.fname,
+      g.lname,
+      r.room_id,
+      b.check_in_date,
+      b.check_out_date,
+      b.total_amount,
+      b.advance_payment
+    FROM Bookings b
+    JOIN Guests g ON b.guest_id = g.guest_id
+    JOIN Rooms r ON b.room_id = r.room_id
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching bookings:', err);
+      return res.status(500).json({ error: 'Failed to fetch bookings' });
+    }
+
+    res.json(results);
   });
 });
 

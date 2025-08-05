@@ -1,0 +1,45 @@
+/* CheckAvailability.css */
+
+.availability-container {
+  background-color: #ffffff;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.availability-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.form-label {
+  font-weight: 500;
+  margin-top: 1rem;
+  color: #444;
+}
+
+.form-control {
+  border-radius: 10px;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+}
+
+.btn-check {
+  background-color: #17a2b8;
+  color: #fff;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  margin-top: 1.5rem;
+  width: 100%;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-check:hover {
+  background-color: #117a8b;
+}

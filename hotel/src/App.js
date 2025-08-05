@@ -9,6 +9,9 @@ import BookingForm from './BookingForm';
 import PaymentForm from './PaymentForm';
 import ConfirmationPage from './ConfirmationPage';
 import { BookingProvider } from './components/BookingContext'; // 🔥 Import provider
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 function App() {
   return (

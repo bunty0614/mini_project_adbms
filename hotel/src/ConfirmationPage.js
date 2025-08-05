@@ -1,5 +1,5 @@
 // src/ConfirmationPage.js
-
+import './ConfirmationPage.css';
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 

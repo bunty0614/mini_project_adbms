@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// GET all guests
+// ✅ GET all guests
 router.get('/', (req, res) => {
   const query = 'SELECT * FROM Guests';
   db.query(query, (err, results) => {
@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
   });
 });
 
-// POST a new guest
+// ✅ POST a new guest
 router.post('/', (req, res) => {
   const { fname, lname, phone, email } = req.body;
 
@@ -22,11 +22,7 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'Please provide all guest details.' });
   }
 
-  const query = `
-    INSERT INTO Guests (fname, lname, phone, email)
-    VALUES (?, ?, ?, ?)
-  `;
-
+  const query = `INSERT INTO Guests (fname, lname, phone, email) VALUES (?, ?, ?, ?)`;
   db.query(query, [fname, lname, phone, email], (err, result) => {
     if (err) {
       console.error('Error inserting guest:', err);
@@ -34,6 +30,21 @@ router.post('/', (req, res) => {
     }
 
     res.json({ message: 'Guest added successfully!', guest_id: result.insertId });
+  });
+});
+
+// ✅ DELETE guest by ID
+router.delete('/:id', (req, res) => {
+  const guestId = req.params.id;
+  const query = 'DELETE FROM Guests WHERE guest_id = ?';
+
+  db.query(query, [guestId], (err, result) => {
+    if (err) {
+      console.error('Error deleting guest:', err);
+      return res.status(500).json({ error: 'Database error while deleting guest.' });
+    }
+
+    res.json({ message: 'Guest deleted successfully' });
   });
 });
 
